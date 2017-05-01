@@ -19,7 +19,7 @@ import Data.Argonaut.Generic.Options (Options(..), SumEncoding(..), dummyUserDec
 import Data.Array (zipWithA, length)
 import Data.Either (Either(Right, Left))
 import Data.Foldable (find)
-import Data.Generic (class Generic, DataConstructor, GenericSignature(..), GenericSpine(..), fromSpine, toSignature)
+import Data.Generic (class Generic, DataConstructor, GenericSignature(..), GenericSpine(..), fromSpine, toSignature, toSpine)
 import Data.Int (fromNumber)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.String (toChar)
@@ -58,11 +58,12 @@ genericDecodeJson' opts'@(Options opts) signature json = case signature of
      let jLabel = (opts.fieldLabelModifier lbl)
      let propSig = (val unit)
 
-     pf <- if (sigIsMaybe propSig) && opts.omitNothingFields
-           then maybe (Right jsonNull) Right $ M.lookup jLabel jObj
-           else mFail ("'" <> jLabel <> "' property missing") (M.lookup jLabel jObj)
-     sp <- genericUserDecodeJson' opts' propSig pf
-     pure { recLabel: lbl, recValue: const sp }
+     if (sigIsMaybe propSig) && opts.omitNothingFields && not (M.member jLabel jObj)
+            then pure { recLabel: lbl, recValue: const (toSpine (Nothing :: Maybe Int)) }
+            else do
+              pf <- mFail ("'" <> jLabel <> "' property missing") (M.lookup jLabel jObj)
+              sp <- genericUserDecodeJson' opts' propSig pf
+              pure { recLabel: lbl, recValue: const sp }
 
  SigProd typeConstr constrSigns -> genericDecodeProdJson' opts' typeConstr constrSigns json
 

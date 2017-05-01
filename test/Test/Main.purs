@@ -283,6 +283,9 @@ main = do
   genericsCheck $ Options $ unwrapOpts { fieldLabelModifier = toUpper }
   log "genericsCheck check with omitNothingFields"
   genericsCheck $ Options $ unwrapOpts { omitNothingFields = true }
+  let unwrapArgonautOpts = case Argonaut.options of Options a -> a
+  log "genericsCheck check with ArgonautOpts with omitNothingFields"
+  genericsCheck $ Options $ unwrapArgonautOpts { omitNothingFields = true }
 
 print :: forall a eff. Show a => a -> Eff (console :: CONSOLE | eff) Unit
 print = log <<< show
