@@ -12,10 +12,8 @@ import Data.Either
 import Data.Int (toNumber)
 import Data.Tuple
 import Data.Maybe
-import Data.Array hiding ((:))
 import Data.Generic
-import Data.Foldable (foldl)
-import Data.List (fromFoldable, List(..), (:))
+import Data.List (List(..), (:))
 import Data.StrMap as SM
 import Data.String (toUpper, singleton, uncons)
 
@@ -23,14 +21,12 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (EXCEPTION())
 import Control.Monad.Eff.Random (RANDOM())
 import Control.Monad.Eff.Console
-import Data.StrMap as M
 
 import Partial.Unsafe (unsafePartial)
 
 import Test.Assert (assert', ASSERT)
 import Test.StrongCheck
-import Test.StrongCheck.Gen
-import Test.StrongCheck.Generic
+import Test.StrongCheck.GenericValue (GenericValue, runGenericValue)
 
 
 
@@ -193,13 +189,13 @@ checkOmitNothingFields = do
   assertEquals encoded expected
 
 
-assertEquals :: forall a eff. (Eq a, Show a) =>
+assertEquals :: forall a eff. Eq a => Show a =>
   a -> a -> Eff (assert :: ASSERT | eff) Unit
 assertEquals a b = do
   let message = show a <> " /= " <> show b
   assert' message (a == b)
 
-genericsCheck :: forall e. Options -> Eff ( err :: EXCEPTION , random :: RANDOM , console :: CONSOLE, assert :: ASSERT | e) Unit
+genericsCheck :: forall e. Options -> Eff ( exception :: EXCEPTION , random :: RANDOM , console :: CONSOLE, assert :: ASSERT | e) Unit
 genericsCheck opts = do
   let vNullary = Nullary2
   let mArgs = MArgs 9 20 "Hello"
@@ -261,11 +257,11 @@ genericsCheck opts = do
   print $ genericEncodeJson opts ntw2
 
   where
-    valEncodeDecode :: forall a. (Eq a, Generic a) => Options -> a -> Boolean
+    valEncodeDecode :: forall a. Eq a => Generic a => Options -> a -> Boolean
     valEncodeDecode opts val = ((Right val) == _) <<< genericDecodeJson opts <<< genericEncodeJson opts $ val
 
 
-main:: forall e. Eff ( err :: EXCEPTION, random :: RANDOM, console :: CONSOLE, assert :: ASSERT | e ) Unit
+main:: forall e. Eff ( exception :: EXCEPTION, random :: RANDOM, console :: CONSOLE, assert :: ASSERT | e ) Unit
 main = do
   log "Check Argonaut record encoding"
   checkRecordEncodingArgonaut
